@@ -63,13 +63,13 @@ export async function POST(req: Request) {
             return Response.json({
                 success: false,
                 message: emailResponse.message
-            },{status: 500})
+            },{status: 400})
         }
 
         return Response.json({
             success: true,
             message: "User Registered successfully. Please verify your email"
-        },{status: 500})
+        },{status: 200})
 
     } catch (error) {
         console.error("Error registering user", error);
