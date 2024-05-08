@@ -35,11 +35,12 @@ export async function GET(request:Request) {
             message: "User Messages fetched successfully",
             messages: user[0].messages
         },{status: 200})
+        
     } catch (error) {
         console.error("Failed to fetch User Messages",error)
         return Response.json({
             success: true,
             message: "Failed to fetch User Messages"
-        },{status: 200})
+        },{status: 500})
     }
 }
