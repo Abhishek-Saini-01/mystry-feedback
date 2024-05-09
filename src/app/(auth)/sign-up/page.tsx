@@ -10,11 +10,11 @@ import * as z from 'zod';
 
 import { Button } from '@/components/ui/button';
 import {
-    Form,
-    FormField,
-    FormItem,
-    FormLabel,
-    FormMessage,
+  Form,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
 } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
 import { useToast } from '@/components/ui/use-toast';
@@ -85,7 +85,7 @@ export default function SignUpForm() {
 
       // Default error message
       let errorMessage = axiosError.response?.data.message;
-      ('There was a problem with your sign-up. Please try again.');
+      // ('There was a problem with your sign-up. Please try again.');
 
       toast({
         title: 'Sign Up Failed',
