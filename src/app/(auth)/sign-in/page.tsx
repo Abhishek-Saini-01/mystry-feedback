@@ -1,91 +1,130 @@
-"use client"
-import { useToast } from "@/components/ui/use-toast"
-import { signUpSchema } from "@/schemas/signUpSchema"
-import { ApiResponse } from "@/types/ApiResponse"
-import { zodResolver } from "@hookform/resolvers/zod"
-import axios, { AxiosError } from "axios"
-import { useRouter } from "next/navigation"
-import { useEffect, useState } from "react"
-import { useForm } from "react-hook-form"
-import { useDebounceValue } from "usehooks-ts"
-import * as z from "zod"
+'use client';
 
-const SignInPage = () => {
+import { zodResolver } from '@hookform/resolvers/zod';
+import Link from 'next/link';
+import { useState } from 'react';
+import { useForm } from 'react-hook-form';
+import * as z from 'zod';
+
+import { Button } from '@/components/ui/button';
+import {
+  Form,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from '@/components/ui/form';
+import { Input } from '@/components/ui/input';
+import { useToast } from '@/components/ui/use-toast';
+import { signInSchema } from '@/schemas/signInSchema';
+import { Loader2 } from 'lucide-react';
+import { signIn } from 'next-auth/react';
+import { useRouter } from 'next/navigation';
+
+const SignInForm = () => {
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const router = useRouter();
   const { toast } = useToast();
 
-  const [username, setUsername] = useState("");
-  const [usernameMessage, setUsernameMessage] = useState("");
-  const [isCheckingUsername, setIsCheckingUsername] = useState(false);
-  const [isSubmitting, setIsSubmitting] = useState(false);
-
-  const debouncedUsername = useDebounceValue(username, 300);
-  
-  //zod implementation
-  const form = useForm<z.infer<typeof signUpSchema>>({
-    resolver: zodResolver(signUpSchema),
+  const form = useForm<z.infer<typeof signInSchema>>({
+    resolver: zodResolver(signInSchema),
     defaultValues: {
-      username: "",
-      email: "",
-      password: "",
-    }
-  })
+      identifier: '',
+      password: '',
+    },
+  });
 
-  useEffect(() => {
-    const checkUsernameUnique = async () => {
-      if (debouncedUsername) {
-        setIsCheckingUsername(true);
-        setUsernameMessage("");
-        try {
-          const res = await axios.get(`/api/check-username-unique?username=${debouncedUsername}`)
-          setUsernameMessage(res.data.message)
-        } catch (error) {
-          const axiosError = error as AxiosError<ApiResponse>;
-          setUsernameMessage(axiosError.response?.data.message ?? "Error checking username")
-        } finally {
-          setIsCheckingUsername(false);
-        }
-      }      
-    }
-    checkUsernameUnique()
-  }, [debouncedUsername]);
-    
-  const onSubmit = async (data: z.infer<typeof signUpSchema>) => {
+  
+
+  const onSubmit = async (data: z.infer<typeof signInSchema>) => {
     setIsSubmitting(true);
-    try {
-      const res = await axios.post<ApiResponse>('/api/sign-up', data)
-      toast({
-        title: "Success",
-        description: res.data.message        
+      const result = await signIn('credentials',{
+        identifier: data.identifier,
+        password: data.password,
+        redirect: false,
       })
-      router.replace(`/verify/${username}`)
-      setIsSubmitting(false);
-    } catch (error) {
-      console.error("Error in sign-up of user",error)
-      const axiosError = error as AxiosError<ApiResponse>;
-      let errorMessage = axiosError.response?.data.message;
-      toast({
-        title: "Signup Failed",
-        description: errorMessage,
-        variant: "destructive"
-      })
-      setIsSubmitting(false);
-    }
-  }
+      if(result?.error){
+        if (result.error === "CredentialsSignin") {
+          toast({
+            title: "Login failed",
+            description: "Incorrect username or password",
+            variant: "destructive"
+          })
+        } else {
+          toast({
+            title: "Login failed",
+            description: "Something went wrong",
+            variant: "destructive"
+          })
+        }
+        setIsSubmitting(false)
+      } 
+      if(result?.url){
+        setIsSubmitting(false)
+        router.replace('/dashboard')
+      }
+  };
 
   return (
-    <div className="flex justify-center items-center min-h-screen bg-gray-100">
+    <div className="flex justify-center items-center min-h-screen bg-gray-800">
       <div className="w-full max-w-md p-8 space-y-8 bg-white rounded-lg shadow-md">
         <div className="text-center">
           <h1 className="text-4xl font-extrabold tracking-tight lg:text-5xl mb-6">
-            Join Mystry Feedback
+            Join True Feedback
           </h1>
-          <p className="mb-4">Sign up to start your anonymous adventure</p>
+          <p className="mb-4">Sign in to start your anonymous adventure</p>
+        </div>
+        <Form {...form}>
+          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+            
+            <FormField
+              name="identifier"
+              control={form.control}
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Email / Username</FormLabel>
+                  <Input {...field}  />
+                  <p className='text-muted text-gray-400 text-sm'>We will send you a verification code</p>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <FormField
+              name="password"
+              control={form.control}
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Password</FormLabel>
+                  <Input type="password" {...field} name="password" />
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            <Button type="submit" className='w-full' disabled={isSubmitting}>
+              {isSubmitting ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Please wait
+                </>
+              ) : (
+                'Sign In'
+              )}
+            </Button>
+          </form>
+        </Form>
+        <div className="text-center mt-4">
+          <p>
+            Do not have account?{' '}
+            <Link href="/sign-up" className="text-blue-600 hover:text-blue-800">
+              Sign up
+            </Link>
+          </p>
         </div>
       </div>
     </div>
-  )
+  );
 }
 
-export default SignInPage
+export default SignInForm;
