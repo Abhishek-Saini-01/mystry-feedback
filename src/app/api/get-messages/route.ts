@@ -27,7 +27,7 @@ export async function GET(request:Request) {
         if(!user || user.length === 0){
             return Response.json({
                 success: false,
-                message: "User not found"
+                message: "No Messages to display"
             },{status: 404})
         }
         return Response.json({
