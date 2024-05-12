@@ -144,8 +144,10 @@ export default function SendMessage() {
       <div className="space-y-4 my-8">
         <div className="space-y-2">
           <Button
-            onClick={fetchSuggestedMessages}
-            className="my-4"
+
+            // onClick={fetchSuggestedMessages}
+            onClick={() => {}}
+            className="my-4 cursor-not-allowed"
             disabled={isSuggestLoading}
           >
             Suggest Messages

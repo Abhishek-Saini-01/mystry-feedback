@@ -9,8 +9,8 @@ export async function DELETE(
   request: Request,
   { params }: { params: { messageid: string } }
 ) {
-  const messageId = params.messageid;
   await dbConnect();
+  const messageId = params.messageid;
   const session = await getServerSession(authOptions);
   const _user: User = session?.user as User;
   if (!session || !_user) {
@@ -21,14 +21,13 @@ export async function DELETE(
   }
 
   try {
-    const updateResult = await UserModel.updateOne(
-      { _id: _user._id },
-      { $pull: { messages: { _id: messageId } } }
-    );
-
-    if (updateResult.modifiedCount === 0) {
+    const result = await UserModel.findByIdAndUpdate(_user._id, {
+      $pull: { messages: { _id: messageId } }
+    }, { new: true });
+    
+    if (!result) {
       return Response.json(
-        { message: 'Message not found or already deleted', success: false },
+        { message: 'Message not found or already deleted', success: true },
         { status: 404 }
       );
     }
